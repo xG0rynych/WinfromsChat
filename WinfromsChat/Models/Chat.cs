@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace WinfromsChat.DAO
+namespace WinfromsChat.Models
 {
     public class Chat
     {
@@ -19,7 +19,7 @@ namespace WinfromsChat.DAO
         public string ChatName { get => _chatName; set => _chatName = value; }
         public User UserAdmin { get => _userAdmin; set => _user = value; }
         public User _User { get => _user; set => _user = value; }
-        public List<Message> Messages { get => _messages; }
+        public List<Message> Messages { get => _messages; set => _messages = value; }
 
         public Chat(User userAdmin, User user, string chatName)
         {
@@ -31,7 +31,13 @@ namespace WinfromsChat.DAO
 
         public void AddMessage(Message message)
         {
+            if(_messages==null)
+            {
+                _messages = new List<Message> { message };
+                return;
+            }
             _messages.Add(message);
+
         }
 
         public void RemoveMessage(Message message)

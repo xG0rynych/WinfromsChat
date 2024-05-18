@@ -14,9 +14,11 @@ namespace WinfromsChat
         [STAThread]
         static void Main()
         {
+            //FormStart form = new FormStart();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new FormStart());
+            
         }
     }
 }

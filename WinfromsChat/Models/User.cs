@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WinfromsChat.DAO
+namespace WinfromsChat.Models
 {
     public class User
     {
@@ -52,6 +52,18 @@ namespace WinfromsChat.DAO
         public void RemoveChat(Chat chat)
         {
             _chats.Remove(chat);
+        }
+
+        public Chat GetChatById(int id)
+        {
+            foreach (var chat in _chats)
+            {
+                if(chat.Id==id)
+                {
+                    return chat;
+                }
+            }
+            return null;
         }
     }
 }

@@ -5,6 +5,8 @@ using System.Configuration;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using WinfromsChat.Models;
+using System.Windows.Forms;
 
 namespace WinfromsChat.DAO
 {
@@ -14,13 +16,13 @@ namespace WinfromsChat.DAO
         private readonly UserDAO _userDAO = new UserDAO();
         private readonly ChatDAO _chatDAO = new ChatDAO();
 
-        public async void AddMessage(Message message)
+        public void AddMessage(Models.Message message)
         {
             try
             {
                 using (var connection = new SqlConnection(_connectionString))
                 {
-                    await connection.OpenAsync();
+                    connection.Open();
                     string query = "INSERT INTO Messages VALUES(@depDate, @fromUser, @toUser, @idChat, @content);";
                     SqlCommand command = new SqlCommand(query, connection);
                     command.Parameters.Add(new SqlParameter("@depDate", message.DepartureDate));
@@ -28,19 +30,60 @@ namespace WinfromsChat.DAO
                     command.Parameters.Add(new SqlParameter("@toUser", message.ToUser.Login));
                     command.Parameters.Add(new SqlParameter("@idChat", message._Chat.Id));
                     command.Parameters.Add(new SqlParameter("@content", message.Content));
-                    await command.ExecuteNonQueryAsync();
+                    command.ExecuteNonQuery();
                 }
             }
             catch (SqlException e)
             {
-                Console.WriteLine(e.Message);
+                MessageBox.Show(e.Message);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                MessageBox.Show(e.Message);
             }
         }
-        public async Task<List<Message>> GetMessagesByChat(int chatId)
+        public List<Models.Message> GetMessagesByChat(int chatId)
+        {
+            try
+            {
+                using (var connection = new SqlConnection(_connectionString))
+                {
+                    connection.Open();
+                    SqlCommand command = new SqlCommand("SELECT * FROM Messages WHERE IdChat=@idChat;", connection);
+                    command.Parameters.Add(new SqlParameter("@idChat", chatId));
+                    using (SqlDataReader reader = command.ExecuteReader())
+                    {
+                        if (reader.HasRows)
+                        {
+                            List<Models.Message> messages = new List<Models.Message>();
+                            while (reader.Read())
+                            {
+                                User fromUser = _userDAO.GetUserByLogin(reader.GetString(2));
+                                User toUser = _userDAO.GetUserByLogin(reader.GetString(3));
+                                string content = reader.GetString(5);
+                                Chat chat = _chatDAO.GetChatById(reader.GetInt32(4));
+                                Models.Message message = new Models.Message(fromUser, toUser, chat, content);
+                                message.Id = reader.GetInt32(0);
+                                message.DepartureDate = reader.GetDateTime(1);
+                                messages.Add(message);
+                            }
+                            return messages;
+                        }
+                    }
+                }
+            }
+            catch (SqlException e)
+            {
+                MessageBox.Show(e.Message);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+            }
+            return null;
+        }
+
+        public async Task<List<Models.Message>> GetMessagesByChatAsync(int chatId)
         {
             try
             {
@@ -53,14 +96,14 @@ namespace WinfromsChat.DAO
                     {
                         if (reader.HasRows)
                         {
-                            List<Message> messages = new List<Message>();
+                            List<Models.Message> messages = new List<Models.Message>();
                             while (await reader.ReadAsync())
                             {
-                                User fromUser = _userDAO.GetUserByLogin(reader.GetString(2)).Result;
-                                User toUser = _userDAO.GetUserByLogin(reader.GetString(3)).Result;
+                                User fromUser = await _userDAO.GetUserByLoginAsync(reader.GetString(2));
+                                User toUser = await _userDAO.GetUserByLoginAsync(reader.GetString(3));
                                 string content = reader.GetString(5);
-                                Chat chat = _chatDAO.GetChatById(reader.GetInt32(4)).Result;
-                                Message message = new Message(fromUser, toUser, chat, content);
+                                Chat chat = await _chatDAO.GetChatByIdAsync(reader.GetInt32(4));
+                                Models.Message message = new Models.Message(fromUser, toUser, chat, content);
                                 message.Id = reader.GetInt32(0);
                                 message.DepartureDate = reader.GetDateTime(1);
                                 messages.Add(message);
@@ -72,11 +115,11 @@ namespace WinfromsChat.DAO
             }
             catch (SqlException e)
             {
-                Console.WriteLine(e.Message);
+                MessageBox.Show(e.Message);
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                MessageBox.Show(e.Message);
             }
             return null;
         }
