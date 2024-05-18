@@ -218,6 +218,7 @@ namespace WinfromsChat
         {
             Owner.Dispose();
             _timerChats.Dispose();
+            _timerMessage.Dispose();
         }
 
         private void btnSendMessage_Click(object sender, EventArgs e)
